@@ -1,14 +1,15 @@
 Physijs.scripts.worker = 'lib/physijs_worker.js';
 Physijs.scripts.ammo = 'ammo.js';
 
-let camera;
 let renderer;
-let scene;
 let sceneWidth;
 let sceneHeight;
 let dom;
-let friction = 0.9;//high
+let car = {};
+const friction = 0.9;//high
 let redraw = true;
+let wheel_material, wheel_geometry, big_wheel_geometry;
+const damping = 0.7;
 
 function init() {
     createScene();
@@ -17,9 +18,9 @@ function init() {
 
 function createScene() {
 
-    sceneWidth = window.innerWidth;
-    sceneHeight = window.innerHeight;
-    camera = new THREE.PerspectiveCamera(30, sceneWidth / sceneHeight, 0.1, 1000);//perspective camera
+    sceneWidth = window.innerWidth - 50;
+    sceneHeight = window.innerHeight - 50;
+    camera = new THREE.PerspectiveCamera(60, sceneWidth / sceneHeight, 0.1, 1000);//perspective camera
     renderer = new THREE.WebGLRenderer({alpha: true});//renderer with transparent backdrop
     renderer.shadowMap.enabled = true;//enable shadow
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -31,12 +32,12 @@ function createScene() {
     scene.setGravity(new THREE.Vector3(0, -30, 0));
     scene.addEventListener('update', physicsUpdate);
 
-    camera.position.set(-120, 50, -120);
+    camera.position.set(-120, 60, 0);
     camera.lookAt(scene.position);
     scene.add(camera);
 
     addField();
-    addTraktor();
+    addTractor();
 
     scene.simulate();
 
@@ -65,12 +66,12 @@ function handleKeyUp(keyEvent) {
 }
 
 function addField() {
-    let size = 100;
+    let size = 1000;
     insertField(size);
     insertWarehouse(size / 2, size / 2);
 }
 
-function insertField(size = 150) {
+function insertField(size) {
 
     let ground_material, ground_geometry, sun, ground;
     sun = new THREE.DirectionalLight(0xFFFFFF);
@@ -91,40 +92,10 @@ function insertField(size = 150) {
         new THREE.MeshStandardMaterial({color: 0xf4d142}), friction, .9 // low restitution
     );
     // Ground
-    ground = new Physijs.BoxMesh(new THREE.BoxGeometry(size, 1, size), ground_material, 0 // mass
+    ground = new Physijs.BoxMesh(new THREE.CylinderGeometry(size, size, 1, 32), ground_material,// mass
     );
     ground.receiveShadow = true;
     scene.add(ground);
-    //walls
-    let wall_material = Physijs.createMaterial(
-        new THREE.MeshStandardMaterial({color: 0x444444}), friction, .9 // low restitution
-    );
-    let wallHeight = 3;
-    let wallLength = size;
-    let wall1 = new Physijs.BoxMesh(new THREE.BoxGeometry(wallLength, wallHeight, 2), wall_material, 0 // mass
-    );
-    //wall1.castShadow = true;
-    wall1.position.y = wallHeight / 2;
-    wall1.position.z = wallLength / 2;
-    scene.add(wall1);
-    let wall2 = new Physijs.BoxMesh(new THREE.BoxGeometry(wallLength, wallHeight, 2), wall_material, 0 // mass
-    );
-    //wall2.castShadow = true;
-    wall2.position.y = wallHeight / 2;
-    wall2.position.z = -wallLength / 2;
-    scene.add(wall2);
-    let wall3 = new Physijs.BoxMesh(new THREE.BoxGeometry(2, wallHeight, wallLength), wall_material, 0 // mass
-    );
-    //wall3.castShadow = true;
-    wall3.position.y = wallHeight / 2;
-    wall3.position.x = -wallLength / 2;
-    scene.add(wall3);
-    let wall4 = new Physijs.BoxMesh(new THREE.BoxGeometry(2, wallHeight, wallLength), wall_material, 0 // mass
-    );
-    //wall4.castShadow = true;
-    wall4.position.y = wallHeight / 2;
-    wall4.position.x = wallLength / 2;
-    scene.add(wall4);
 }
 
 function insertWarehouse(x, y) {
@@ -152,8 +123,93 @@ function insertHaystack(x, y) {
 
 }
 
-function addTraktor() {
+function addTractor() {
+    var car_material = Physijs.createMaterial(new THREE.MeshStandardMaterial({
+        color: 0xff6666,
+        shading: THREE.FlatShading
+    }), friction, .9);
+    wheel_material = Physijs.createMaterial(new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            shading: THREE.FlatShading
+        }), friction, .6 // medium restitution
+    );
+    wheel_geometry = new THREE.CylinderGeometry(2, 2, 1, 10);
 
+    car.body = new Physijs.BoxMesh(new THREE.BoxGeometry(10, 2, 7), car_material, 700);
+    car.body.position.y = 8;
+    car.body.castShadow = true;
+    car.body.name = "cart";
+    scene.add(car.body);
+
+    car.wheel_fm_constraint = addWheel(car.wheel_fm, new THREE.Vector3(-7.5, 6.5, 0), false, 300);
+    car.wheel_fm_constraint.setAngularLowerLimit({x: 0, y: -Math.PI / 8, z: 1});
+    car.wheel_fm_constraint.setAngularUpperLimit({x: 0, y: Math.PI / 8, z: 0});
+    car.wheel_bl_constraint = addWheel(car.wheel_bl, new THREE.Vector3(3.5, 6.5, 5), false, 500);
+    car.wheel_br_constraint = addWheel(car.wheel_br, new THREE.Vector3(3.5, 6.5, -5), false, 500);
+
+    car.carriage = new Physijs.BoxMesh(new THREE.BoxGeometry(16, 7, 5), car_material, 200);
+    car.carriage.position.y = 13;
+    car.carriage.position.x = 12;
+    car.carriage.castShadow = true;
+    car.carriage.name = "cart";
+    scene.add(car.carriage);
+
+    car.carriage_constraint = new Physijs.HingeConstraint(
+        car.carriage, // First object to be constrained
+        car.body, // constrained to this
+        new THREE.Vector3(6, 0, 0), // at this point
+        new THREE.Vector3(0, 1, 0) // along this axis
+    );
+    scene.addConstraint(car.carriage_constraint);
+    car.carriage_constraint.setLimits(
+        -Math.PI / 3, // minimum angle of motion, in radians
+        Math.PI / 3, // maximum angle of motion, in radians
+        0, // applied as a factor to constraint error
+        0 // controls bounce at limit (0.0 == no bounce)
+    );
+    /*//this will also work
+    car.carriage_constraint = new Physijs.DOFConstraint(	car.carriage, car.body, new THREE.Vector3( 6, 6.5, 0 ));
+    scene.addConstraint( car.carriage_constraint );
+    car.carriage_constraint.setAngularLowerLimit({ x: 0, y: -Math.PI / 3, z: -Math.PI / 3 });
+    car.carriage_constraint.setAngularUpperLimit({ x: 0, y: Math.PI / 3, z: Math.PI / 3 });
+    */
+    big_wheel_geometry = new THREE.CylinderGeometry(4, 4, 1, 10);
+
+    car.carriage_wheel_bl_constraint = addWheel(car.carriage_wheel_bl, new THREE.Vector3(15, 8.3, 4), true, 100);
+    car.carriage_wheel_bl_constraint.setAngularLowerLimit({x: 0, y: 0, z: 1});
+    car.carriage_wheel_bl_constraint.setAngularUpperLimit({x: 0, y: 0, z: 0});
+    car.carriage_wheel_br_constraint = addWheel(car.carriage_wheel_br, new THREE.Vector3(15, 8.3, -4), true, 100);
+    car.carriage_wheel_br_constraint.setAngularLowerLimit({x: 0, y: 0, z: 1});
+    car.carriage_wheel_br_constraint.setAngularUpperLimit({x: 0, y: 0, z: 0});
+}
+
+function addWheel(wheel, pos, isBig, weight) {
+    var geometry = wheel_geometry;
+    if (isBig) {
+        geometry = big_wheel_geometry;
+    }
+    wheel = new Physijs.CylinderMesh(
+        geometry,
+        wheel_material,
+        weight
+    );
+    wheel.name = "cart";
+    wheel.rotation.x = Math.PI / 2;
+    wheel.position.set(pos.x, pos.y, pos.z);
+    wheel.castShadow = true;
+    scene.add(wheel);
+    wheel.setDamping(0, damping);
+    var wheelConstraint = new Physijs.DOFConstraint(
+        wheel, car.body, pos
+    );
+    if (isBig) {
+        wheelConstraint = new Physijs.DOFConstraint(
+            wheel, car.carriage, pos);
+    }
+    scene.addConstraint(wheelConstraint);
+    wheelConstraint.setAngularLowerLimit({x: 0, y: 0, z: 0});
+    wheelConstraint.setAngularUpperLimit({x: 0, y: 0, z: 0});
+    return wheelConstraint;
 }
 
 function physicsUpdate() {
@@ -169,4 +225,4 @@ function render() {
 
 }
 
-window.addEventListener("load", init);
+//window.addEventListener("load", init);
