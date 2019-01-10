@@ -6,6 +6,8 @@ const debug = true;
 
 let processor;
 let vehicle;
+let sound;
+let settings;
 
 // Parameters
 let fieldSize = [100, 100];
@@ -14,6 +16,11 @@ let haySize = [1, 1, 2];
 //Items
 let hays = [];
 let obstacles = [];
+
+// UI
+let scoreGameText;
+let welcomeText;
+let soundIcon;
 
 function iterate(obj, root) {
     let i = 0;
@@ -26,7 +33,15 @@ function iterate(obj, root) {
 }
 
 function init() {
+
+    settings = new Settings();
     processor = new Processor(5, fieldSize, haySize);
+    sound = new Sound(function () {
+        // Fallback to play
+        settings.setSoundEnabled(false);
+        updateSoundIcon();
+    });
+    initUI();
     initScene();
     addLight();
     scene.add(getSky(1000));
@@ -68,7 +83,12 @@ function init() {
     onRenderFunctions.push(function (delta, now) {
         vehicle.update(keyHandler.isUpPressed(), keyHandler.isRightPressed(), keyHandler.isDownPressed(), keyHandler.isLeftPressed());
         update();
-    })
+    });
+
+    if (settings.isSoundEnabled()) {
+        sound.playBG();
+    }
+
 }
 
 function update() {
@@ -79,6 +99,7 @@ function update() {
             console.log("It collected hay %s", i);
             scene.remove(hays[i]);
             hays.splice(i, 1);
+            processor.onHayCollect();
         }
     }
     for (let i = 0; i < obstacles.length; i++) {
@@ -88,6 +109,15 @@ function update() {
             console.log("It intersects with obstacle %s", i);
         }
     }
+
+    if (hays.length > 0) {
+        scoreGameText.innerHTML = 'Score ' + processor.getLevelScore();
+    } else {
+        scoreGameText.hidden = true;
+        welcomeText.hidden = false;
+        welcomeText.innerHTML = 'DONE!'
+    }
+
 }
 
 function setupLevel() {
@@ -110,12 +140,15 @@ function setupLevel() {
         scene.add(obst);
         obstacles.push(obst);
     }
+
+    welcomeText.hidden = true;
 }
 
 function initScene() {
     var renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    //document.body.appendChild(renderer.domElement);
+    document.getElementById('holder').appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 10000);
@@ -127,6 +160,31 @@ function initScene() {
         camera.lookAt(vehicle.position);
         renderer.render(scene, camera);
     })
+}
+
+function initUI() {
+    scoreGameText = document.getElementById('scoreGame');
+    welcomeText = document.getElementById('welcomeText');
+
+    soundIcon = document.getElementById('soundToggle');
+    soundIcon.addEventListener("click", function () {
+        settings.setSoundEnabled(!settings.isSoundEnabled());
+        updateSoundIcon();
+        if (settings.isSoundEnabled()) {
+            sound.playBG();
+        } else {
+            sound.stop();
+        }
+    });
+    updateSoundIcon();
+}
+
+function updateSoundIcon() {
+    if (settings.isSoundEnabled()) {
+        soundIcon.src = 'images/speaker.png';
+    } else {
+        soundIcon.src = 'images/mute.png';
+    }
 }
 
 function addLight() {

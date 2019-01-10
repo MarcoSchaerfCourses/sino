@@ -2,6 +2,7 @@ class Processor {
 
     constructor(level, fieldSize, haySize) {
         this.level = level;
+        this.score = 0;
         this._fieldSize = fieldSize;
         this._haySize = haySize;
     }
@@ -33,6 +34,14 @@ class Processor {
         return levelParameters;
     }
 
+    onHayCollect() {
+        this.score += 1;
+    }
+
+    getLevelScore() {
+        return this.score;
+    }
+
     /**
      *
      * @param timeGone
@@ -42,7 +51,7 @@ class Processor {
     }
 
     reset() {
-
+        this.score = 0;
     }
 
 }
@@ -171,4 +180,58 @@ Vehicle = (function () {
 
     };
     return Vehicle;
+})();
+
+Sound = (function () {
+
+    function Sound(callback) {
+
+        this.callback = callback;
+
+        // BG
+        this.bg = new Audio('sound/Spy Hunter.mp3');
+        this.bg.addEventListener('ended', function () {
+            this.currentTime = 0;
+            this.play();
+        }, false);
+        this.bg.volume = 0.5;
+    }
+
+    Sound.prototype = {
+        constructor: Sound,
+        playBG: function () {
+            let promise = this.bg.play();
+            if (promise !== undefined) {
+                promise.then(_ => {
+                    // Autoplay started!
+                }).catch(error => {
+                    // Autoplay was prevented.
+                    // Show a "Play" button so that user can start playback.
+                    this.callback();
+                });
+            }
+        },
+        stop(bool) {
+            this.bg.pause();
+        },
+    };
+    return Sound;
+})();
+
+Settings = (function () {
+
+    function Settings() {
+        this.sound = false;
+    }
+
+    Settings.prototype = {
+        constructor: Settings,
+        isSoundEnabled() {
+            return this.sound;
+        },
+        setSoundEnabled(enabled) {
+            this.sound = enabled;
+        }
+    };
+    return Settings;
 })();

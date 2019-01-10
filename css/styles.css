@@ -1,0 +1,37 @@
+@font-face {
+    font-family: 'ArcadeClassic';
+    src: url('../font/ARCADECLASSIC.woff');
+}
+
+.container {
+    position: relative;
+}
+
+.scoreGame {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    color: white;
+    font-size: xx-large;
+    font-family: ArcadeClassic, sans-serif;
+}
+
+.welcomeFront {
+    position: absolute;
+    left: 29%;
+    top: 45%;
+    font-size: 120pt;
+    color: white;
+    font-family: ArcadeClassic, sans-serif;
+}
+
+.soundToggle {
+    position: absolute;
+    width: 30pt;
+    height: 30pt;
+    right: 10pt;
+    bottom: 10pt;
+    padding: 10px;
+    background: white; /* The color you want the icon to change to */
+    mix-blend-mode: screen;
+}
