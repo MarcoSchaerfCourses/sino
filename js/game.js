@@ -67,7 +67,27 @@ function init() {
 
     onRenderFunctions.push(function (delta, now) {
         vehicle.update(keyHandler.isUpPressed(), keyHandler.isRightPressed(), keyHandler.isDownPressed(), keyHandler.isLeftPressed());
+        update();
     })
+}
+
+function update() {
+    let vehicleBBox = vehicle.getBoundingBox();
+    for (let i = 0; i < hays.length; i++) {
+        let oBBox = getObjectBBox(hays[i]);
+        if (oBBox.intersectsBox(vehicleBBox)) {
+            console.log("It collected hay %s", i);
+            scene.remove(hays[i]);
+            hays.splice(i, 1);
+        }
+    }
+    for (let i = 0; i < obstacles.length; i++) {
+        let oBBox = getObjectBBox(obstacles[i]);
+        if (oBBox.intersectsBox(vehicleBBox)) {
+            vehicle.metObstacle(oBBox);
+            console.log("It intersects with obstacle %s", i);
+        }
+    }
 }
 
 function setupLevel() {

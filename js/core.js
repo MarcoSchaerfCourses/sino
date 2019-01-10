@@ -80,11 +80,12 @@ Vehicle = (function () {
 
         this.body = null;
         this.position = new THREE.Vector3();
-        this.length = 2.0;
+        this.size = null;
 
         let scope = this;
         getTractor(function (object1) {
             scope.body = object1;
+            scope.size = scope.getBoundingBox().getSize(new THREE.Vector3());
             elementsCallback(object1)
         });
 
@@ -92,8 +93,12 @@ Vehicle = (function () {
 
     Vehicle.prototype = {
         constructor: Vehicle,
-        metObstacle: function () {
-
+        /**
+         *
+         * @param boundingBox type THREE.Box
+         */
+        metObstacle: function (boundingBox) {
+            this.speed = -this.speed / 2;
         },
         update: function (forr, right, backw, left) {
 
@@ -131,7 +136,7 @@ Vehicle = (function () {
                 }
             }
             // Calculating velocities. Using kinematic model of bicycle
-            let thettaSpeed = 0.5 * this.length * Math.tan(this.angle) * this.speed;
+            let thettaSpeed = 0.5 * this.size.z * Math.tan(this.angle) * this.speed;
             this.body.rotateY(thettaSpeed);
 
             let v = new THREE.Vector3(1, 0, 0);
@@ -151,11 +156,17 @@ Vehicle = (function () {
             shift(this.body, xSpeed, 0, ySpeed);
             this.position = this.body.position;
         },
-        isIntersects: function (object) {
-
+        getBoundingBox: function () {
+            if (this.body == null) {
+                return null;
+            } else {
+                return getObjectBBox(this.body);
+            }
         },
         reset: function () {
             this.position = new THREE.Vector3();
+            this.angle = 0;
+            this.speed = 0;
         },
 
     };

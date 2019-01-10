@@ -14,7 +14,7 @@ KeyPressListener = (function () {
         //console.log("Release " + e.key);
     });
 
-    function isKeyPressed (key) {
+    function isKeyPressed(key) {
         return keystate[key];
     }
 
@@ -50,4 +50,8 @@ function shift(object, x = 0, y = 0, z = 0) {
     object.position.x += x;
     object.position.y += y;
     object.position.z += z;
+}
+
+function getObjectBBox(object) {
+    return new THREE.Box3().setFromObject(object);
 }
