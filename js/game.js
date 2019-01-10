@@ -4,9 +4,8 @@ let camera;
 let onRenderFunctions = [];
 const debug = true;
 
-let tractor;
-let warehouse;
 let processor;
+let vehicle;
 
 // Parameters
 let fieldSize = [100, 100];
@@ -26,12 +25,6 @@ function iterate(obj, root) {
     });
 }
 
-function shift(object, x = 0, y = 0, z = 0) {
-    object.position.x += x;
-    object.position.y += y;
-    object.position.z += z;
-}
-
 function init() {
     processor = new Processor(5, fieldSize, haySize);
     initScene();
@@ -43,13 +36,8 @@ function init() {
         repeatX: fieldSize[0],
         repeatY: fieldSize[1],
     }));
-    getTractor(function (object) {
-        tractor = object;
-        if (tractor != null) {
-            scene.add(object);
-        }
-
-        //iterate(object, "_")
+    vehicle = new Vehicle(0.2, 0.001, 0.0005, 0.01, function (element) {
+        scene.add(element);
     });
 
 
@@ -67,14 +55,23 @@ function init() {
     //     camera.lookAt(scene.position)
     // });
 
-    if (debug)
+    if (debug) {
+        //The X axis is red. The Y axis is green. The Z axis is blue.
         scene.add(new THREE.AxisHelper(100));
+    }
 
     initRendering();
     setupLevel();
+
+    let keyHandler = new KeyPressListener();
+
+    onRenderFunctions.push(function (delta, now) {
+        vehicle.update(keyHandler.isUpPressed(), keyHandler.isRightPressed(), keyHandler.isDownPressed(), keyHandler.isLeftPressed());
+    })
 }
 
 function setupLevel() {
+    //vehicle.reset();
     let level = processor.generateLevel();
     for (let i = 0; i < level.hays.length; i++) {
         let item = level.hays[i];
@@ -104,12 +101,10 @@ function initScene() {
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 10000);
     camera.position.z = 10; // Forward-backward
     camera.position.x = 13; // Left-right
-    camera.position.y = 150; // Up-down
+    camera.position.y = 15; // Up-down
 
     onRenderFunctions.push(function () {
-        if (tractor != null) {
-            camera.lookAt(tractor.position);
-        }
+        camera.lookAt(vehicle.position);
         renderer.render(scene, camera);
     })
 }
@@ -157,7 +152,7 @@ function reset() {
     }
     obstacles.clear();
 
-    tractor.position.set(0, 0, 0);
+    vehicle.position.set(0, 0, 0);
 
 }
 
