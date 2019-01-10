@@ -195,12 +195,28 @@ Sound = (function () {
             this.play();
         }, false);
         this.bg.volume = 0.5;
+
+        // Collect
+        this.collect = new Audio('sound/fall.mp3');
+
+        // Hit
+        this.hit = new Audio('sound/hit.mp3');
     }
 
     Sound.prototype = {
         constructor: Sound,
         playBG: function () {
-            let promise = this.bg.play();
+            this._managePromise(this.bg.play())
+        },
+        playHit() {
+            this.hit.currentTime = 0;
+            this._managePromise(this.hit.play());
+        },
+        playCollect() {
+            this.collect.currentTime = 0;
+            this._managePromise(this.collect.play());
+        },
+        _managePromise(promise) {
             if (promise !== undefined) {
                 promise.then(_ => {
                     // Autoplay started!

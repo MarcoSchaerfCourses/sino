@@ -93,6 +93,8 @@ function init() {
 
 function update() {
     let vehicleBBox = vehicle.getBoundingBox();
+    let hit = false;
+    let collect = false;
     for (let i = 0; i < hays.length; i++) {
         let oBBox = getObjectBBox(hays[i]);
         if (oBBox.intersectsBox(vehicleBBox)) {
@@ -100,6 +102,7 @@ function update() {
             scene.remove(hays[i]);
             hays.splice(i, 1);
             processor.onHayCollect();
+            collect = true;
         }
     }
     for (let i = 0; i < obstacles.length; i++) {
@@ -107,6 +110,17 @@ function update() {
         if (oBBox.intersectsBox(vehicleBBox)) {
             vehicle.metObstacle(oBBox);
             console.log("It intersects with obstacle %s", i);
+            hit = true;
+        }
+    }
+
+    if (settings.isSoundEnabled()) {
+        if (hit) {
+            sound.playHit();
+        }
+
+        if (collect) {
+            sound.playCollect();
         }
     }
 
