@@ -42,14 +42,6 @@ class Processor {
         return this.score;
     }
 
-    /**
-     *
-     * @param timeGone
-     */
-    update(timeGone) {
-
-    }
-
     reset() {
         this.score = 0;
     }
@@ -146,7 +138,7 @@ Vehicle = (function () {
             }
             // Calculating velocities. Using kinematic model of bicycle
             let thettaSpeed = 0.5 * this.size.z * Math.tan(this.angle) * this.speed;
-            this.body.rotateY(thettaSpeed);
+            this.body.rotateY(thettaSpeed / 10);
 
             let v = new THREE.Vector3(1, 0, 0);
             v.applyEuler(this.body.rotation);
@@ -237,16 +229,16 @@ Sound = (function () {
 Settings = (function () {
 
     function Settings() {
-        this.sound = false;
+        this.storage = window.localStorage;
     }
 
     Settings.prototype = {
         constructor: Settings,
         isSoundEnabled() {
-            return this.sound;
+            return this.storage.getItem('sound') === 'true';
         },
         setSoundEnabled(enabled) {
-            this.sound = enabled;
+            this.storage.setItem('sound', enabled);
         }
     };
     return Settings;
