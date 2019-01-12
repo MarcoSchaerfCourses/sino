@@ -78,15 +78,45 @@ Vehicle = (function () {
         this.angle = 0;
         this.maxSteerSpeed = maxSteeringSpeed;
         this.maxSteerAngle = Math.PI / 3; // 60 deg
+        this.frontWheels = [];
+        this.frontWheelsOriginalRotations = [];
+        this.frontWheelSize = null;
+        this.frontWheelRotationAngle = 0;
+        this.rearWheels = null;
+        this.rearWheelsOriginalRotations = null;
+        this.rearWheelRotationAngle = 0;
 
         this.body = null;
         this.position = new THREE.Vector3();
         this.size = null;
 
+
         let scope = this;
         getTractor(function (object1) {
             scope.body = object1;
             scope.size = scope.getBoundingBox().getSize(new THREE.Vector3());
+
+            // Search for wheels
+            object1.traverse(function (child) {
+
+                // Front
+                if (child.name === 'front_wheel') {
+                    scope.frontWheels.push(child);
+                    scope.frontWheelsOriginalRotations.push(child.rotation.clone());
+                    if (scope.frontWheelSize == null) {
+                        scope.frontWheelSize = getObjectBBox(child).getSize(new THREE.Vector3());
+                    }
+                }
+
+                // Rear
+                if (child.name === 'rear_wheels') {
+                    scope.rearWheels = child;
+                    scope.rearWheelsOriginalRotations = child.rotation.clone();
+                }
+            });
+
+
+
             elementsCallback(object1)
         });
 
@@ -155,7 +185,26 @@ Vehicle = (function () {
             //     this.angle.toFixed(3), thettaSpeed.toFixed(3), thetta.toFixed(3), xSpeed.toFixed(3), ySpeed.toFixed(3));
 
             shift(this.body, xSpeed, 0, ySpeed);
+            this._updateFrontWheels();
             this.position = this.body.position;
+        },
+        _updateFrontWheels() {
+            for (let i = 0; i < this.frontWheels.length; i++) {
+                let wheel = this.frontWheels[i];
+
+                wheel.rotation.copy(this.frontWheelsOriginalRotations[i]);
+
+                wheel.rotateY(-this.angle);
+
+                this.a += 0.01;
+            }
+        },
+        _updateRearWheels() {
+
+            for (let i = 0; i < this.rearWheels.length; i++) {
+                let wheel = this.rearWheels[i];
+
+            }
         },
         getBoundingBox: function () {
             if (this.body == null) {

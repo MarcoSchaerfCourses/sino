@@ -1,5 +1,6 @@
 let scene;
 let camera;
+let renderer;
 
 let onRenderFunctions = [];
 const debug = true;
@@ -46,10 +47,10 @@ function init() {
     addLight();
     scene.add(getSky(1000));
     scene.add(getGrassGround({
-        width: fieldSize[0],
-        height: fieldSize[1],
-        repeatX: fieldSize[0],
-        repeatY: fieldSize[1],
+        width: 1000,
+        height: 1000,
+        repeatX: 100,
+        repeatY: 100,
     }));
     vehicle = new Vehicle(0.2, 0.001, 0.0005, 0.01, function (element) {
         scene.add(element);
@@ -93,6 +94,11 @@ function init() {
 
 function update() {
     let vehicleBBox = vehicle.getBoundingBox();
+
+    if (vehicleBBox == null) {
+        return;
+    }
+
     let hit = false;
     let collect = false;
     for (let i = 0; i < hays.length; i++) {
@@ -159,21 +165,28 @@ function setupLevel() {
 }
 
 function initScene() {
-    var renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     //document.body.appendChild(renderer.domElement);
     document.getElementById('holder').appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 10000);
-    camera.position.z = 10; // Forward-backward
-    camera.position.x = 13; // Left-right
     camera.position.y = 15; // Up-down
 
     onRenderFunctions.push(function () {
+        camera.position.z = vehicle.position.z - 20; // Forward-backward
+        camera.position.x = vehicle.position.x; // Left-right
         camera.lookAt(vehicle.position);
         renderer.render(scene, camera);
     })
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
 function initUI() {
@@ -249,3 +262,4 @@ function reset() {
 }
 
 window.addEventListener("load", init);
+window.addEventListener("resize", onWindowResize, false);

@@ -106,6 +106,49 @@ function getObstacle(size) {
 }
 
 function getTractor(callback) {
+    //getTractorModel(callback);
+    getTractorCustom(callback);
+}
+
+function getTractorCustom(callback) {
+
+    var mtlLoader = new THREE.MTLLoader();
+    mtlLoader.setPath(modelsBaseUrl + "tractor1/");
+    mtlLoader.load("tractor.mtl", function (materials) {
+        materials.preload();
+        var objLoader = new THREE.OBJLoader();
+        objLoader.setMaterials(materials);
+
+        let vehicle = new THREE.Group();
+
+        objLoader.load(modelsBaseUrl + "tractor1/tractor_body.obj", function (body) {
+            // Add body
+            vehicle.add(body);
+            objLoader.load(modelsBaseUrl + "tractor1/tractor_front_wheel.obj", function (wheel) {
+                // Add front left wheel
+                wheel.name = 'front_wheel';
+                shift(wheel, 1.7, 1, 3);
+                vehicle.add(wheel);
+                objLoader.load(modelsBaseUrl + "tractor1/tractor_front_wheel.obj", function (wheel) {
+                    // Add front right wheel
+                    wheel.name = 'front_wheel';
+                    wheel.rotateY(Math.PI);
+                    shift(wheel, -1.7, 1, 3);
+                    vehicle.add(wheel);
+                    objLoader.load(modelsBaseUrl + "tractor1/tractor_rear_wheels.obj", function (wheel) {
+                        // Add front right wheel
+                        wheel.name = 'rear_wheels';
+                        //shift(wheel, 1.7, 1, 3);
+                        vehicle.add(wheel);
+                        callback(vehicle);
+                    });
+                });
+            });
+        });
+    });
+}
+
+function getTractorModel(callback) {
     var mtlLoader = new THREE.MTLLoader();
     mtlLoader.setPath(modelsBaseUrl + "tractor1/");
     mtlLoader.load("tractor.mtl", function (materials) {
