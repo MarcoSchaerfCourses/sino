@@ -3,7 +3,8 @@ let camera;
 let renderer;
 
 let onRenderFunctions = [];
-const debug = true;
+const debug = window.location.host.includes('localhost');
+let vehicleBBox;
 
 let processor;
 let vehicle;
@@ -54,6 +55,10 @@ function init() {
     }));
     vehicle = new Vehicle(0.2, 0.001, 0.0005, 0.01, function (element) {
         scene.add(element);
+        if (debug) {
+            vehicleBBox = new THREE.BoxHelper(element, 0xffff00);
+            scene.add(vehicleBBox);
+        }
     });
 
 
@@ -84,6 +89,9 @@ function init() {
     onRenderFunctions.push(function (delta, now) {
         vehicle.update(keyHandler.isUpPressed(), keyHandler.isRightPressed(), keyHandler.isDownPressed(), keyHandler.isLeftPressed());
         update();
+        if (vehicleBBox != null) {
+            vehicleBBox.update();
+        }
     });
 
     if (settings.isSoundEnabled()) {
@@ -159,6 +167,10 @@ function setupLevel() {
         obst.rotateY(item.rotation);
         scene.add(obst);
         obstacles.push(obst);
+        if (debug) {
+            let box = new THREE.BoxHelper(obst, 0xffff00);
+            scene.add(box);
+        }
     }
 
     welcomeText.hidden = true;
