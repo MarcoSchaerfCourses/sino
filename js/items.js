@@ -87,6 +87,7 @@ function getHay(size) {
 }
 
 let obstMaterial = null;
+
 function getObstacle(size) {
     if (obstMaterial == null) {
         var texture = texturesLoader.load(texturesBaseUrl + 'rock.jpg');
@@ -124,25 +125,30 @@ function getTractorCustom(callback) {
         objLoader.load(modelsBaseUrl + "tractor1/tractor_body.obj", function (body) {
             // Add body
             vehicle.add(body);
-            objLoader.load(modelsBaseUrl + "tractor1/tractor_front_wheel.obj", function (wheel) {
+            objLoader.load(modelsBaseUrl + "tractor1/tractor_front_wheel.obj", function (wheel_left) {
                 // Add front left wheel
-                wheel.name = 'front_wheel';
-                shift(wheel, 1.7, 1, 3);
-                vehicle.add(wheel);
-                objLoader.load(modelsBaseUrl + "tractor1/tractor_front_wheel.obj", function (wheel) {
+                wheel_left.name = 'front_wheel';
+                let wheel_right = wheel_left.clone();
+
+                let size = getObjectBBox(wheel_left).getSize(new THREE.Vector3());
+                let z_shift = 2.9;
+                let x_shift = 2;
+                shift(wheel_left, x_shift, size.y / 2, z_shift);
+
+                wheel_right.rotateY(Math.PI);
+                shift(wheel_right, -x_shift, size.y / 2, z_shift);
+
+                vehicle.add(wheel_left);
+                vehicle.add(wheel_right);
+                objLoader.load(modelsBaseUrl + "tractor1/tractor_rear_wheels.obj", function (wheel) {
                     // Add front right wheel
-                    wheel.name = 'front_wheel';
-                    wheel.rotateY(Math.PI);
-                    shift(wheel, -1.7, 1, 3);
+                    wheel.name = 'rear_wheels';
+                    let size = getObjectBBox(wheel).getSize(new THREE.Vector3());
+                    shift(wheel, 0, size.y / 2, -2);
                     vehicle.add(wheel);
-                    objLoader.load(modelsBaseUrl + "tractor1/tractor_rear_wheels.obj", function (wheel) {
-                        // Add front right wheel
-                        wheel.name = 'rear_wheels';
-                        //shift(wheel, 1.7, 1, 3);
-                        vehicle.add(wheel);
-                        callback(vehicle);
-                    });
+                    callback(vehicle);
                 });
+
             });
         });
     });

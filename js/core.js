@@ -85,6 +85,7 @@ Vehicle = (function () {
         this.rearWheels = null;
         this.rearWheelsOriginalRotations = null;
         this.rearWheelRotationAngle = 0;
+        this.rearWheelSize = null;
 
         this.body = null;
         this.position = new THREE.Vector3();
@@ -109,12 +110,12 @@ Vehicle = (function () {
                 }
 
                 // Rear
-                if (child.name === 'rear_wheels') {
+                else if (child.name === 'rear_wheels') {
                     scope.rearWheels = child;
                     scope.rearWheelsOriginalRotations = child.rotation.clone();
+                    scope.rearWheelSize = getObjectBBox(child).getSize(new THREE.Vector3());
                 }
             });
-
 
 
             elementsCallback(object1)
@@ -186,25 +187,22 @@ Vehicle = (function () {
 
             shift(this.body, xSpeed, 0, ySpeed);
             this._updateFrontWheels();
+            this._updateRearWheels();
             this.position = this.body.position;
         },
         _updateFrontWheels() {
+            this.frontWheelRotationAngle += 2 * this.speed / this.frontWheelSize.z;
             for (let i = 0; i < this.frontWheels.length; i++) {
                 let wheel = this.frontWheels[i];
-
                 wheel.rotation.copy(this.frontWheelsOriginalRotations[i]);
-
                 wheel.rotateY(-this.angle);
-
-                this.a += 0.01;
+                wheel.rotateX(this.frontWheelsOriginalRotations[i].y === 0 ? -this.frontWheelRotationAngle : this.frontWheelRotationAngle);
             }
         },
         _updateRearWheels() {
-
-            for (let i = 0; i < this.rearWheels.length; i++) {
-                let wheel = this.rearWheels[i];
-
-            }
+            this.rearWheelRotationAngle += 2 * this.speed / this.rearWheelSize.z;
+            this.rearWheels.rotation.copy(this.rearWheelsOriginalRotations);
+            this.rearWheels.rotateX(-this.rearWheelRotationAngle);
         },
         getBoundingBox: function () {
             if (this.body == null) {
