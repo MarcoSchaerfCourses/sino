@@ -1,9 +1,12 @@
+let stats;
+
 let scene;
 let camera;
 let renderer;
 
 let onRenderFunctions = [];
-const debug = window.location.host.includes('localhost');
+let parameters = parseQuery(window.location.search);
+const debug = parameters['debug'] === 'true';
 let vehicleBBox;
 
 let processor;
@@ -23,16 +26,6 @@ let obstacles = [];
 let scoreGameText;
 let welcomeText;
 let soundIcon;
-
-function iterate(obj, root) {
-    let i = 0;
-    obj.traverse(function (child) {
-        let id = root + "." + i;
-        console.log(id + " " + child + " " + child.name);
-        iterate(child, root);
-        i++;
-    });
-}
 
 function init() {
 
@@ -216,6 +209,13 @@ function initUI() {
         }
     });
     updateSoundIcon();
+
+    if (debug) {
+        stats = new Stats();
+        stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+        document.body.appendChild(stats.dom);
+    }
+
 }
 
 function updateSoundIcon() {
@@ -244,6 +244,8 @@ function addLight() {
 function initRendering() {
     var lastTimeMsec = null;
     requestAnimationFrame(function animate(nowMsec) {
+        if (stats != null)
+            stats.begin();
         // keep looping
         requestAnimationFrame(animate);
         // measure time
@@ -254,6 +256,8 @@ function initRendering() {
         onRenderFunctions.forEach(function (funct) {
             funct(deltaMsec / 1000, nowMsec / 1000);
         });
+        if (stats != null)
+            stats.end();
     });
 }
 

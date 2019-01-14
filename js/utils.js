@@ -55,3 +55,13 @@ function shift(object, x = 0, y = 0, z = 0) {
 function getObjectBBox(object) {
     return new THREE.Box3().setFromObject(object);
 }
+
+function parseQuery(queryString) {
+    var query = {};
+    var pairs = (queryString[0] === '?' ? queryString.substr(1) : queryString).split('&');
+    for (var i = 0; i < pairs.length; i++) {
+        var pair = pairs[i].split('=');
+        query[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1] || '');
+    }
+    return query;
+}
