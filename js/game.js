@@ -47,6 +47,7 @@ function init() {
         repeatY: 100,
     }));
     vehicle = new Vehicle(0.2, 0.001, 0.0005, 0.01, function (element) {
+        element.add(camera);
         scene.add(element);
         if (debug) {
             vehicleBBox = new THREE.BoxHelper(element, 0xffff00);
@@ -178,11 +179,14 @@ function initScene() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 10000);
     camera.position.y = 15; // Up-down
+    camera.position.z = -15;
+    camera.rotateX(0.5);
+    camera.rotateY(Math.PI);
 
     onRenderFunctions.push(function () {
-        camera.position.z = vehicle.position.z - 20; // Forward-backward
-        camera.position.x = vehicle.position.x; // Left-right
-        camera.lookAt(vehicle.position);
+        //camera.position.z = vehicle.position.z - 20; // Forward-backward
+        //camera.position.x = vehicle.position.x; // Left-right
+        //camera.lookAt(vehicle.position);
         renderer.render(scene, camera);
     })
 }
