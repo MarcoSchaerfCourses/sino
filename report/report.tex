@@ -130,7 +130,7 @@ The world of the game is represented as a simulation of real world with infinite
 \end{figure}
 
 \subsubsection{Hays and obstacles}
-Hays are represented as parallelogram of constant size 1x1x2 with texture of hay (Figure \ref{hay_item}).
+Hays are represented as rectangular cuboid of constant size 1x1x2 with texture of hay (Figure \ref{hay_item}).
 
 \begin{figure}[h!]
 \begin{center}
@@ -141,7 +141,7 @@ Hays are represented as parallelogram of constant size 1x1x2 with texture of hay
 \end{figure}
 
 \par
-Obstacles are represented as parallelograms with various sizes. An example of obstacle of size 1x1x4 is showed on Figure \ref{obstacle_item}.
+Obstacles are represented as rectangular cuboid with various sizes. An example of obstacle of size 1x1x4 is showed on Figure \ref{obstacle_item}.
 
 \begin{figure}[h!]
 \begin{center}
@@ -216,16 +216,84 @@ caption={onWindowResize function}
 ]
 {../js/game.js}
 
-\item \textit{update} - called on every frame update call. 
+\item \textit{update} - called on every frame update call. Updates vehicle position and configuration, check for vehicle collides with hays and obstacles, update score. Collide check is done using THREE.js \textit{BoundingBox} and it's method \textit{intersectsBox}. In case of intersection of bounding boxes of vehicle and item one is counting as colliding.
 \end{itemize}
 \subsubsection{core.js}
-Contains main components of the code
+Contains main components of the game such as:
+\begin{itemize}
+\item \textit{Processor} - class which is responsible for generating \textit{Level} objects that describe game level characteristics. Those characteristic are include amount of obstacles and hay blocks, their position and orientation.
+\item \textit{Vehicle} - class that is responsible for instantiating of 3D model of the vehicle, handling calculating position and orientation of it's components.
+\item \textit{Sound} - utility class for managing of sound playback, encapsulate instantiating, running and releasing of \textit{Audio} objects by providing handy methods \textit{playBG}, \textit{playHit}, \textit{playCollect} for playing of background, hit and collect audio.
+\item \textit{Settings} - utility class that encapsulate managing settings and work with persistent storage. Provides methods \textit{isSoundEnabled} and \textit{setSoundEnabled} for saving user's audio policy preference.
+\end{itemize}
 \subsubsection{items.js}
-Maintains initialization of graphical components of the game
+items.js file contains methods for instantiating  graphical components of the game such as ground, sky, vehicles, hay, obstacles etc. 
+\\
+All items are instances of \textit{Object3D} class that is the base class for most objects in three.js and provides a set of properties and methods for manipulating objects in 3D space \citep{threeapi:object3d}. 
+\\
+\textit{Mesh} class that is successor class of \textit{Object3D} represents an entity that has \textit{Geometry} like \textit{PlaneGeometry}, \textit{CylinderGeometry}, \textit{TextGeometry}, \textit{BoxGeometry} etc. to describe structure of entity and material which provides characteristic of surface, it's appearance and interaction with light. Materials can be parametrized with a single color, list of colors or a texture - image pattern that later mapped onto geometry surface.
+\par
+\textit{Ground}
+\par
+The world's ground is a \textit{Mesh} object with \textit{PlaneGeometry} geometry of size 1000x1000 and \textit{MeshPhongMaterial} with texture of grass (Figure \ref{grass1}). 
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.3]{../images/grasslight-small.jpg}
+\end{center}
+\caption{Grass texture}
+\label{grass1}
+\end{figure}
+
+\textit{Sky}
+\par
+Sky object is a sphere (using \textit{SphereGeometry}) \textit{Mesh} object of size 10000 that is surrounding ground plane. Material of this sphere is a texture of blue sky showed on Figure \ref{sky1}. To apply material on internal side of the mesh material's parameter side must be set to \textit{THREE.BackSide}. Full listing of the function \textit{getSky} is showed on the Listing \ref{lst:getsky}.
+\\
+\lstinputlisting[language=Java,
+%commentstyle=\color{green},
+firstline=49, lastline=64,
+%keywordstyle=\color{blue},
+caption={getSky function},
+label={lst:getsky}
+]
+{../js/items.js}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=1.0]{../images/sky.jpg}
+\end{center}
+\caption{Sky texture}
+\label{sky1}
+\end{figure}
+
+\textit{Hay block}
+\par
+Hay blocks are a constant size 1x1x2 cubits \textit{Mesh} with \textit{BoxGeometry} and hay textured material (Figure \ref{hay1}).
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=1.0]{../images/hay.jpg}
+\end{center}
+\caption{Hay texture}
+\label{hay1}
+\end{figure}
+
+\textit{Obstacle}
+\par
+Obstacles are a various size cubits \textit{Mesh} with \textit{BoxGeometry} and rock textured material showed on Figure \ref{obst1}.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=1.0]{../images/rock.jpg}
+\end{center}
+\caption{Sky texture}
+\label{obst1}
+\end{figure}
+
 \subsubsection{utils.js}
 Consist of utility functions that are not depend of the logic and structure of the game.
 \subsection{Distribution}
-Final source code of the project is public accessible as git repository on the GitHub web service by \url{https://github.com/MarcoSchaerfCourses/sino/} link. It could be run online by link \url{https://marcoschaerfcourses.github.io/sino/} since repository was deployed using GitHub Web Pages service.
+Final source code of the project is public accessible as git repository on the GitHub web service by \url{https://github.com/MarcoSchaerfCourses/sino/} link. It could be run online using link \url{https://marcoschaerfcourses.github.io/sino/} since repository was deployed using GitHub Web Pages service.
 \newpage
 \section{Known Issues}
 Testing of final product showed following issues that require additional time to investigation:
