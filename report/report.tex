@@ -112,8 +112,8 @@ Accelerating (forward and backward) using up and down arrow keys accordingly. Re
 }
 \end{itemize}
 Collecting action is done by colliding with hay block that lead to increase of the score and removing hay item from the field.
-\subsection{Name}
-The name ``Sino'' comes fron Ukrainian word ``ciho'' - hay \cite{wiki:sino}.
+%\subsection{Name}
+%The name ``Sino'' comes fron Ukrainian word ``ciho'' - hay \cite{wiki:sino}.
 
 \newpage
 \section{Implementation}
@@ -298,17 +298,28 @@ Final source code of the project is public accessible as git repository on the G
 \section{Known Issues}
 Testing of final product showed following issues that require additional time to investigation:
 \begin{itemize}
-\item Performance issues
-\item Texture import
-\item Bounding Box size increasing depending on rotation of object
-\item Adaptation for small screen sizes
+\item \textit{Performance issues}
+\\
+Like any web application and, particularly, those with 3D graphics current project is suffering from performance issues that need more close attention and optimization. Starting from providing loading page experience (screen that showed while models and textures are loading), reducing models complexity  and finishing careful memory allocation on every frame update.
+\item \textit{Texture import}
+\\
+There are issues with correct loading textures for vehicle, obstacles and hey blocks that leads to visual glitches and inconvenience. This requires more careful work with professional graphical software and creation more complicated texture files.
+\item \textit{Bounding Box size} 
+\\
+Current implementation of \textit{BoundingBox} class doesn't consider 3D object rotation during processing of object's bounding box (Figure \ref{bbissue}). This leads to increasing it's size and incorrect behavior and false positive results during collide check. This problem requires implementing so called \textit{Orientable Bounding Box} or \textit{OOB} that will address this issue.
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[scale=0.4]{../images/bb_issue.jpg}
+\end{center}
+\caption{Bounding box size of rotated objects is bigger then their real size}
+\label{}
+\end{figure}
+
+\item \textit{Adaptation for small screen sizes}
+\\
+The game isn't optimized for mobile displays that requires adjusting of object's scales and camera angles for better user experience.
 \end{itemize}
-
-\newpage
-\section{Possible Improvements}
-\subsection{Performance}
-\subsection{Interface}
-
 
 \newpage
 \bibliographystyle{plain}
