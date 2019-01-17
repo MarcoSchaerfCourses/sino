@@ -281,12 +281,18 @@ Settings = (function () {
 
     function Settings() {
         this.storage = window.localStorage;
+        this.soundDefault = true;
     }
 
     Settings.prototype = {
         constructor: Settings,
         isSoundEnabled() {
-            return this.storage.getItem('sound') === 'true';
+            let value = this.storage.getItem('sound');
+            if (value == null) {
+                return this.soundDefault;
+            } else {
+                return value === 'true';
+            }
         },
         setSoundEnabled(enabled) {
             this.storage.setItem('sound', enabled);
