@@ -35,3 +35,29 @@
     background: white; /* The color you want the icon to change to */
     mix-blend-mode: screen;
 }
+
+progress::-webkit-progress-bar {background-color: transparent; width: 100%;}
+progress {background-color: transparent;}
+
+progress {color: white;}
+progress::-webkit-progress-value {background-color: white !important;}
+progress::-moz-progress-bar {background-color: white !important;}
+
+.progress {
+    position: absolute;
+    right: 10px;
+    top: 55px;
+    width: 160px;
+    height: 15px;
+    border: 2px solid white;
+    color: white;
+}
+
+.time {
+    position: absolute;
+    right: 180px;
+    top: 45px;
+    color: white;
+    font-size: xx-large;
+    font-family: ArcadeClassic, sans-serif;
+}

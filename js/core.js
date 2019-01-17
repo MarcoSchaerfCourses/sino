@@ -42,6 +42,10 @@ class Processor {
         return this.score;
     }
 
+    getLevelDuration() {
+        return 60;
+    }
+
     reset() {
         this.score = 0;
     }

@@ -13,6 +13,9 @@ let processor;
 let vehicle;
 let sound;
 let settings;
+let keyHandler;
+
+let startTime = null;
 
 // Parameters
 let fieldSize = [100, 100];
@@ -21,11 +24,14 @@ let haySize = [1, 1, 2];
 //Items
 let hays = [];
 let obstacles = [];
+let haysTotal = 0;
 
 // UI
 let scoreGameText;
 let welcomeText;
 let soundIcon;
+let timeProgress;
+let timeLeft;
 
 function init() {
 
@@ -78,10 +84,9 @@ function init() {
     initRendering();
     setupLevel();
 
-    let keyHandler = new KeyPressListener();
+    keyHandler = new KeyPressListener();
 
     onRenderFunctions.push(function (delta, now) {
-        vehicle.update(keyHandler.isUpPressed(), keyHandler.isRightPressed(), keyHandler.isDownPressed(), keyHandler.isLeftPressed());
         update();
         if (vehicleBBox != null) {
             vehicleBBox.update();
@@ -95,24 +100,47 @@ function init() {
 }
 
 function update() {
+
+    vehicle.update(keyHandler.isUpPressed(), keyHandler.isRightPressed(), keyHandler.isDownPressed(), keyHandler.isLeftPressed());
+
     let vehicleBBox = vehicle.getBoundingBox();
 
     if (vehicleBBox == null) {
         return;
     }
 
-    let hit = false;
-    let collect = false;
-    for (let i = 0; i < hays.length; i++) {
-        let oBBox = getObjectBBox(hays[i]);
-        if (oBBox.intersectsBox(vehicleBBox)) {
-            console.log("It collected hay %s", i);
-            scene.remove(hays[i]);
-            hays.splice(i, 1);
-            processor.onHayCollect();
-            collect = true;
+    let gameOver = false;
+    scoreGameText.innerHTML = '' + processor.getLevelScore() + ' / ' + haysTotal;
+
+    if (hays.length <= 0) {
+        welcomeText.hidden = false;
+        welcomeText.innerHTML = 'DONE!';
+        gameOver = true;
+    }
+
+    if (!gameOver) {
+        if (!updateTime()) {
+            welcomeText.hidden = false;
+            welcomeText.innerHTML = 'TIME IS UP!';
+            gameOver = true;
         }
     }
+
+    let hit = false;
+    let collect = false;
+    if (!gameOver) {
+        for (let i = 0; i < hays.length; i++) {
+            let oBBox = getObjectBBox(hays[i]);
+            if (oBBox.intersectsBox(vehicleBBox)) {
+                console.log("It collected hay %s", i);
+                scene.remove(hays[i]);
+                hays.splice(i, 1);
+                processor.onHayCollect();
+                collect = true;
+            }
+        }
+    }
+
     for (let i = 0; i < obstacles.length; i++) {
         let oBBox = getObjectBBox(obstacles[i]);
         if (oBBox.intersectsBox(vehicleBBox)) {
@@ -131,20 +159,24 @@ function update() {
             sound.playCollect();
         }
     }
+}
 
-    if (hays.length > 0) {
-        scoreGameText.innerHTML = 'Score ' + processor.getLevelScore();
-    } else {
-        scoreGameText.hidden = true;
-        welcomeText.hidden = false;
-        welcomeText.innerHTML = 'DONE!'
-    }
-
+/**
+ * @returns false if time is up
+ */
+function updateTime() {
+    let nowTime = getNowSeconds();
+    let left = Math.max(0, processor.getLevelDuration() - nowTime + startTime);
+    timeLeft.innerHTML = '' + Math.floor(left / 60) + ":" + (left % 60).pad(2);
+    timeProgress.value = left / processor.getLevelDuration() * 100;
+    return left > 0;
 }
 
 function setupLevel() {
     //vehicle.reset();
     let level = processor.generateLevel();
+    haysTotal = level.hays.length;
+    startTime = getNowSeconds();
     for (let i = 0; i < level.hays.length; i++) {
         let item = level.hays[i];
         let hay = getHay(item.size);
@@ -201,6 +233,8 @@ function onWindowResize() {
 function initUI() {
     scoreGameText = document.getElementById('scoreGame');
     welcomeText = document.getElementById('welcomeText');
+    timeProgress = document.getElementById('timeProgress');
+    timeLeft = document.getElementById('time');
 
     soundIcon = document.getElementById('soundToggle');
     soundIcon.addEventListener("click", function () {

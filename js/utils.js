@@ -65,3 +65,13 @@ function parseQuery(queryString) {
     }
     return query;
 }
+
+function getNowSeconds() {
+    return Math.floor(Date.now() / 1000);
+}
+
+Number.prototype.pad = function(size) {
+    var s = String(this);
+    while (s.length < (size || 2)) {s = "0" + s;}
+    return s;
+}
