@@ -1,15 +1,21 @@
+let stats;
+
 let scene;
 let camera;
 let renderer;
 
 let onRenderFunctions = [];
-const debug = window.location.host.includes('localhost');
+let parameters = parseQuery(window.location.search);
+const debug = parameters['debug'] === 'true';
 let vehicleBBox;
 
 let processor;
 let vehicle;
 let sound;
 let settings;
+let keyHandler;
+
+let startTime = null;
 
 // Parameters
 let fieldSize = [100, 100];
@@ -18,21 +24,14 @@ let haySize = [1, 1, 2];
 //Items
 let hays = [];
 let obstacles = [];
+let haysTotal = 0;
 
 // UI
 let scoreGameText;
 let welcomeText;
 let soundIcon;
-
-function iterate(obj, root) {
-    let i = 0;
-    obj.traverse(function (child) {
-        let id = root + "." + i;
-        console.log(id + " " + child + " " + child.name);
-        iterate(child, root);
-        i++;
-    });
-}
+let timeProgress;
+let timeLeft;
 
 function init() {
 
@@ -53,7 +52,8 @@ function init() {
         repeatX: 100,
         repeatY: 100,
     }));
-    vehicle = new Vehicle(0.2, 0.001, 0.0005, 0.01, function (element) {
+    vehicle = new Vehicle(10, 0.2, 0.05, 0.5, function (element) {
+        element.add(camera);
         scene.add(element);
         if (debug) {
             vehicleBBox = new THREE.BoxHelper(element, 0xffff00);
@@ -84,11 +84,10 @@ function init() {
     initRendering();
     setupLevel();
 
-    let keyHandler = new KeyPressListener();
+    keyHandler = new KeyPressListener();
 
     onRenderFunctions.push(function (delta, now) {
-        vehicle.update(keyHandler.isUpPressed(), keyHandler.isRightPressed(), keyHandler.isDownPressed(), keyHandler.isLeftPressed());
-        update();
+        update(delta);
         if (vehicleBBox != null) {
             vehicleBBox.update();
         }
@@ -100,25 +99,48 @@ function init() {
 
 }
 
-function update() {
+function update(deltaTime) {
+
+    vehicle.update(keyHandler.isUpPressed(), keyHandler.isRightPressed(), keyHandler.isDownPressed(), keyHandler.isLeftPressed(), deltaTime);
+
     let vehicleBBox = vehicle.getBoundingBox();
 
     if (vehicleBBox == null) {
         return;
     }
 
-    let hit = false;
-    let collect = false;
-    for (let i = 0; i < hays.length; i++) {
-        let oBBox = getObjectBBox(hays[i]);
-        if (oBBox.intersectsBox(vehicleBBox)) {
-            console.log("It collected hay %s", i);
-            scene.remove(hays[i]);
-            hays.splice(i, 1);
-            processor.onHayCollect();
-            collect = true;
+    let gameOver = false;
+    scoreGameText.innerHTML = '' + processor.getLevelScore() + ' / ' + haysTotal;
+
+    if (hays.length <= 0) {
+        welcomeText.hidden = false;
+        welcomeText.innerHTML = 'DONE!';
+        gameOver = true;
+    }
+
+    if (!gameOver) {
+        if (!updateTime()) {
+            welcomeText.hidden = false;
+            welcomeText.innerHTML = 'TIME IS UP!';
+            gameOver = true;
         }
     }
+
+    let hit = false;
+    let collect = false;
+    if (!gameOver) {
+        for (let i = 0; i < hays.length; i++) {
+            let oBBox = getObjectBBox(hays[i]);
+            if (oBBox.intersectsBox(vehicleBBox)) {
+                console.log("It collected hay %s", i);
+                scene.remove(hays[i]);
+                hays.splice(i, 1);
+                processor.onHayCollect();
+                collect = true;
+            }
+        }
+    }
+
     for (let i = 0; i < obstacles.length; i++) {
         let oBBox = getObjectBBox(obstacles[i]);
         if (oBBox.intersectsBox(vehicleBBox)) {
@@ -137,20 +159,24 @@ function update() {
             sound.playCollect();
         }
     }
+}
 
-    if (hays.length > 0) {
-        scoreGameText.innerHTML = 'Score ' + processor.getLevelScore();
-    } else {
-        scoreGameText.hidden = true;
-        welcomeText.hidden = false;
-        welcomeText.innerHTML = 'DONE!'
-    }
-
+/**
+ * @returns false if time is up
+ */
+function updateTime() {
+    let nowTime = getNowSeconds();
+    let left = Math.max(0, processor.getLevelDuration() - nowTime + startTime);
+    timeLeft.innerHTML = '' + Math.floor(left / 60) + ":" + (left % 60).pad(2);
+    timeProgress.value = left / processor.getLevelDuration() * 100;
+    return left > 0;
 }
 
 function setupLevel() {
     //vehicle.reset();
     let level = processor.generateLevel();
+    haysTotal = level.hays.length;
+    startTime = getNowSeconds();
     for (let i = 0; i < level.hays.length; i++) {
         let item = level.hays[i];
         let hay = getHay(item.size);
@@ -185,11 +211,14 @@ function initScene() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 10000);
     camera.position.y = 15; // Up-down
+    camera.position.z = -18;
+    camera.rotateX(0.35);
+    camera.rotateY(Math.PI);
 
     onRenderFunctions.push(function () {
-        camera.position.z = vehicle.position.z - 20; // Forward-backward
-        camera.position.x = vehicle.position.x; // Left-right
-        camera.lookAt(vehicle.position);
+        //camera.position.z = vehicle.position.z - 20; // Forward-backward
+        //camera.position.x = vehicle.position.x; // Left-right
+        //camera.lookAt(vehicle.position);
         renderer.render(scene, camera);
     })
 }
@@ -204,6 +233,8 @@ function onWindowResize() {
 function initUI() {
     scoreGameText = document.getElementById('scoreGame');
     welcomeText = document.getElementById('welcomeText');
+    timeProgress = document.getElementById('timeProgress');
+    timeLeft = document.getElementById('time');
 
     soundIcon = document.getElementById('soundToggle');
     soundIcon.addEventListener("click", function () {
@@ -216,6 +247,13 @@ function initUI() {
         }
     });
     updateSoundIcon();
+
+    if (debug) {
+        stats = new Stats();
+        stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+        document.body.appendChild(stats.dom);
+    }
+
 }
 
 function updateSoundIcon() {
@@ -244,6 +282,8 @@ function addLight() {
 function initRendering() {
     var lastTimeMsec = null;
     requestAnimationFrame(function animate(nowMsec) {
+        if (stats != null)
+            stats.begin();
         // keep looping
         requestAnimationFrame(animate);
         // measure time
@@ -254,6 +294,8 @@ function initRendering() {
         onRenderFunctions.forEach(function (funct) {
             funct(deltaMsec / 1000, nowMsec / 1000);
         });
+        if (stats != null)
+            stats.end();
     });
 }
 

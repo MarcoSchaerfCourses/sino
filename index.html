@@ -8,8 +8,7 @@
     <link rel="stylesheet" type="text/css" href="css/styles.css">
 
     <script type="text/javascript" src="lib/three.min.js"></script>
-    <!--<script type="text/javascript" src="lib/stats.min.js"></script>-->
-    <script type="text/javascript" src="lib/physi.js"></script>
+    <script type="text/javascript" src="lib/stats.min.js"></script>
     <script type="text/javascript" src="lib/jszip.min.js"></script>
     <script type="text/javascript" src="lib/loaders/OBJLoader.js"></script>
     <script type="text/javascript" src="lib/loaders/3MFLoader.js"></script>
@@ -21,13 +20,15 @@
     <script type="text/javascript" src="js/game.js"></script>
 
     <meta charset="UTF-8">
-    <title>Haymaking challenge</title>
+    <title>Sino: Haymaking challenge</title>
 </head>
 <body style='margin: 0; background-color: #bbbbbb; overflow: hidden;'>
 <div class="container" id="holder">
     <label class="scoreGame" id="scoreGame"></label>
     <label class="welcomeFront" id="welcomeText"> Welcome </label>
     <input class="soundToggle" id="soundToggle" type="image" src="images/mute.png" />
+    <progress class="progress" id="timeProgress" max="100" value="50"></progress>
+    <label class="time" id="time">0:00</label>
 </div>
 </body>
 </html>

@@ -42,6 +42,10 @@ class Processor {
         return this.score;
     }
 
+    getLevelDuration() {
+        return 60;
+    }
+
     reset() {
         this.score = 0;
     }
@@ -132,7 +136,7 @@ Vehicle = (function () {
         metObstacle: function (boundingBox) {
             this.speed = -this.speed / 2;
         },
-        update: function (forr, right, backw, left) {
+        update: function (forr, right, backw, left, deltaTime) {
 
             if (this.body == null) {
                 return;
@@ -155,21 +159,21 @@ Vehicle = (function () {
 
             // Angle
             if (left || right) {
-                let steeringAngle = this.maxSteerSpeed;
+                let steeringAngle = this.maxSteerSpeed * deltaTime;
                 if (left) {
                     steeringAngle = -steeringAngle;
                 }
                 this.angle = Math.max(-this.maxSteerAngle, Math.min(this.maxSteerAngle, this.angle + steeringAngle));
             } else {
                 if (this.angle > 0) {
-                    this.angle = Math.max(0, this.angle - this.maxSteerSpeed);
+                    this.angle = Math.max(0, this.angle - this.maxSteerSpeed * deltaTime);
                 } else {
-                    this.angle = Math.min(0, this.angle + this.maxSteerSpeed);
+                    this.angle = Math.min(0, this.angle + this.maxSteerSpeed * deltaTime);
                 }
             }
             // Calculating velocities. Using kinematic model of bicycle
             let thettaSpeed = 0.5 * this.size.z * Math.tan(this.angle) * this.speed;
-            this.body.rotateY(thettaSpeed / 10);
+            this.body.rotateY(thettaSpeed * deltaTime / 10);
 
             let v = new THREE.Vector3(1, 0, 0);
             v.applyEuler(this.body.rotation);
@@ -185,13 +189,13 @@ Vehicle = (function () {
             //console.log("Wheel angle %s, Thetta speed %s, thetta %s, xSpeed %s, ySpeed %s",
             //     this.angle.toFixed(3), thettaSpeed.toFixed(3), thetta.toFixed(3), xSpeed.toFixed(3), ySpeed.toFixed(3));
 
-            shift(this.body, xSpeed, 0, ySpeed);
-            this._updateFrontWheels();
-            this._updateRearWheels();
+            shift(this.body, xSpeed * deltaTime, 0, ySpeed * deltaTime);
+            this._updateFrontWheels(deltaTime);
+            this._updateRearWheels(deltaTime);
             this.position = this.body.position;
         },
-        _updateFrontWheels() {
-            this.frontWheelRotationAngle += 2 * this.speed / this.frontWheelSize.z;
+        _updateFrontWheels(deltaTime) {
+            this.frontWheelRotationAngle += 2 * this.speed * deltaTime / this.frontWheelSize.z;
             for (let i = 0; i < this.frontWheels.length; i++) {
                 let wheel = this.frontWheels[i];
                 wheel.rotation.copy(this.frontWheelsOriginalRotations[i]);
@@ -199,8 +203,8 @@ Vehicle = (function () {
                 wheel.rotateX(this.frontWheelsOriginalRotations[i].y === 0 ? -this.frontWheelRotationAngle : this.frontWheelRotationAngle);
             }
         },
-        _updateRearWheels() {
-            this.rearWheelRotationAngle += 2 * this.speed / this.rearWheelSize.z;
+        _updateRearWheels(deltaTime) {
+            this.rearWheelRotationAngle += 2 * this.speed * deltaTime / this.rearWheelSize.z;
             this.rearWheels.rotation.copy(this.rearWheelsOriginalRotations);
             this.rearWheels.rotateX(-this.rearWheelRotationAngle);
         },
@@ -277,12 +281,18 @@ Settings = (function () {
 
     function Settings() {
         this.storage = window.localStorage;
+        this.soundDefault = true;
     }
 
     Settings.prototype = {
         constructor: Settings,
         isSoundEnabled() {
-            return this.storage.getItem('sound') === 'true';
+            let value = this.storage.getItem('sound');
+            if (value == null) {
+                return this.soundDefault;
+            } else {
+                return value === 'true';
+            }
         },
         setSoundEnabled(enabled) {
             this.storage.setItem('sound', enabled);
