@@ -211,8 +211,8 @@ function initScene() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 10000);
     camera.position.y = 15; // Up-down
-    camera.position.z = -15;
-    camera.rotateX(0.5);
+    camera.position.z = -18;
+    camera.rotateX(0.35);
     camera.rotateY(Math.PI);
 
     onRenderFunctions.push(function () {
