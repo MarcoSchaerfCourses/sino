@@ -52,7 +52,7 @@ function init() {
         repeatX: 100,
         repeatY: 100,
     }));
-    vehicle = new Vehicle(0.2, 0.001, 0.0005, 0.01, function (element) {
+    vehicle = new Vehicle(10, 0.2, 0.05, 0.5, function (element) {
         element.add(camera);
         scene.add(element);
         if (debug) {
@@ -87,7 +87,7 @@ function init() {
     keyHandler = new KeyPressListener();
 
     onRenderFunctions.push(function (delta, now) {
-        update();
+        update(delta);
         if (vehicleBBox != null) {
             vehicleBBox.update();
         }
@@ -99,9 +99,9 @@ function init() {
 
 }
 
-function update() {
+function update(deltaTime) {
 
-    vehicle.update(keyHandler.isUpPressed(), keyHandler.isRightPressed(), keyHandler.isDownPressed(), keyHandler.isLeftPressed());
+    vehicle.update(keyHandler.isUpPressed(), keyHandler.isRightPressed(), keyHandler.isDownPressed(), keyHandler.isLeftPressed(), deltaTime);
 
     let vehicleBBox = vehicle.getBoundingBox();
 
