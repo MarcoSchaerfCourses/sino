@@ -11,3 +11,6 @@ Browser 3D game. Drive the tractor, collect hay, enjoy!
 [Normal mode](https://marcoschaerfcourses.github.io/sino/) 
 <br/>
 [Debug mode](https://marcoschaerfcourses.github.io/sino/?debug=true) (shows frame rate info, an axes helper and bounding boxes)
+
+## Author
+Dmytro Horpynchenko
